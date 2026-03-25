@@ -56,13 +56,16 @@ pipeline {
         stage('SonarQube Scan') {
             steps {
                 echo "Running SonarQube Scan..."
-                sh '''
-                    # Point to the settings file inside the jenkins folder
-                    sonar-scanner \
-                      -Dproject.settings=jenkins/sonar-project.properties \
-                      -Dsonar.host.url=${SONAR_HOST_URL} \
-                      -Dsonar.login=${SONAR_TOKEN}
-                '''
+                // 'sonarqube' here refers to the name of the SonarQube server configured in Jenkins > Manage Jenkins > System
+                withSonarQubeEnv('sonarqube') {
+                    sh '''
+                        # Point to the settings file inside the jenkins folder
+                        sonar-scanner \
+                          -Dproject.settings=jenkins/sonar-project.properties \
+                          -Dsonar.host.url=${SONAR_HOST_URL} \
+                          -Dsonar.login=${SONAR_TOKEN}
+                    '''
+                }
             }
         }
 
