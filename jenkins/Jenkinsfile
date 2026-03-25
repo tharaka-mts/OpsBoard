@@ -4,42 +4,35 @@ pipeline {
     environment {
         // Local SonarQube environment variables
         SONAR_HOST_URL = "http://sonarqube:9000"
-        // In a real local setup, use Jenkins credentials
-        SONAR_TOKEN = "generate-this-token-in-sonarqube-later"
+        // This credentials ID should match the token created in Jenkins referring to SonarQube token
+        SONAR_TOKEN = credentials('sonar-token') 
+        
+        // Docker image tags
+        BACKEND_IMAGE = "opsboard-backend:local"
+        FRONTEND_IMAGE = "opsboard-frontend:local"
     }
 
     stages {
         stage('Checkout') {
             steps {
-                // Checkout from local git or standard workspace
-                echo "Simulating SCM Checkout..."
                 checkout scm
             }
         }
 
-        stage('Backend Build/Test') {
+        stage('Backend Build & Test') {
             steps {
                 dir('backend') {
-                    // Try Maven wrapper, fallback to system Maven
-                    sh '''
-                        if [ -f "mvnw" ]; then
-                            ./mvnw clean compile test || echo "Maven tests failed"
-                        else
-                            mvn clean compile test || echo "Maven not found or tests failed"
-                        fi
-                    '''
+                    sh 'mvn clean compile test'
                 }
             }
         }
 
-        stage('Frontend Build/Test') {
+        stage('Frontend Build') {
             steps {
                 dir('frontend') {
-                    // Use local npm
                     sh '''
-                        npm install || echo "npm install failed"
-                        npm run build || echo "npm build failed"
-                        npm run test || echo "npm test failed"
+                        npm install
+                        npm run build
                     '''
                 }
             }
@@ -48,19 +41,21 @@ pipeline {
         stage('OWASP Dependency-Check') {
             steps {
                 echo "Running OWASP Dependency-Check..."
-                sh 'echo "Simulating Dependency-Check. Real run requires plugin or CLI tool."'
+                sh 'dependency-check.sh --project "OpsBoard" --scan . --format HTML --out dependency-check-report'
             }
         }
 
         stage('SonarQube Scan') {
             steps {
                 echo "Running SonarQube Scan..."
-                // Assuming sonar-scanner is installed or using Maven plugin
                 sh '''
-                    echo "Simulating SonarQube API hit"
-                    # Real run example:
-                    # sonar-scanner -Dsonar.projectBaseDir=${WORKSPACE} -Dsonar.host.url=${SONAR_HOST_URL} -Dsonar.login=${SONAR_TOKEN}
-                    echo "SonarQube Scan Stage Completed"
+                    # Relying on jenkins/sonar-project.properties for configurations
+                    # We pass the token directly to the scanner CLI
+                    cd jenkins && \
+                    sonar-scanner \
+                      -Dsonar.projectBaseDir=${WORKSPACE} \
+                      -Dsonar.host.url=${SONAR_HOST_URL} \
+                      -Dsonar.login=${SONAR_TOKEN}
                 '''
             }
         }
@@ -69,31 +64,62 @@ pipeline {
             steps {
                 echo "Waiting for SonarQube Quality Gate..."
                 timeout(time: 5, unit: 'MINUTES') {
-                    // In real setup, requires 'waitForQualityGate' step from SonarQube plugin
-                    echo "Simulating Quality Gate check..."
+                    // Requires a webhook configured in SonarQube pointing to:
+                    // http://jenkins_local:8080/sonarqube-webhook/
+                    waitForQualityGate abortPipeline: true
                 }
             }
         }
 
-        stage('Trivy Scan') {
+        stage('Build Backend Docker Image locally') {
             steps {
-                echo "Running Trivy Vulnerability Scan..."
-                // Assuming Jenkins agent has Docker mapped
-                sh '''
-                    docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:latest fs / || echo "Trivy command failed or docker not found"
-                '''
+                dir('backend') {
+                    sh "docker build -t ${BACKEND_IMAGE} ."
+                }
+            }
+        }
+
+        stage('Build Frontend Docker Image locally') {
+            steps {
+                dir('frontend') {
+                    sh "docker build -t ${FRONTEND_IMAGE} ."
+                }
+            }
+        }
+
+        stage('Trivy filesystem scan') {
+            steps {
+                echo "Running Trivy Vulnerability Scan on filesystem..."
+                sh 'trivy fs --no-progress .'
+            }
+        }
+
+        stage('Trivy image scan') {
+            steps {
+                echo "Running Trivy Vulnerability Scan on built images..."
+                sh "trivy image --no-progress ${BACKEND_IMAGE}"
+                sh "trivy image --no-progress ${FRONTEND_IMAGE}"
+            }
+        }
+
+        stage('Show local images') {
+            steps {
+                echo "Listing generated internal local docker images..."
+                sh 'docker images | grep opsboard || true'
             }
         }
     }
 
     post {
+        always {
+            archiveArtifacts artifacts: 'dependency-check-report/*', allowEmptyArchive: true
+            echo "CI pipeline completed."
+        }
         success {
-            echo "SUCCESS: Local CI pipeline completed."
-            // Placeholder: slackSend channel: '#ci-alerts', message: "Build Success - ${env.JOB_NAME} ${env.BUILD_NUMBER}"
+            echo "SUCCESS: Local CI pipeline finished successfully."
         }
         failure {
             echo "FAILED: Local CI pipeline failed."
-            // Placeholder: slackSend channel: '#ci-alerts', message: "Build Failed - ${env.JOB_NAME} ${env.BUILD_NUMBER}"
         }
     }
 }
