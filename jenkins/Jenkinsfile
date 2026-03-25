@@ -37,8 +37,8 @@ pipeline {
             steps {
                 dir('frontend') {
                     sh '''
-                        npm install
-                        npm run build
+                        yarn install
+                        yarn build
                     '''
                 }
             }
@@ -57,11 +57,9 @@ pipeline {
             steps {
                 echo "Running SonarQube Scan..."
                 sh '''
-                    # Relying on jenkins/sonar-project.properties for configurations
-                    # We pass the token directly to the scanner CLI
-                    cd jenkins && \
+                    # Point to the settings file inside the jenkins folder
                     sonar-scanner \
-                      -Dsonar.projectBaseDir=${WORKSPACE} \
+                      -Dproject.settings=jenkins/sonar-project.properties \
                       -Dsonar.host.url=${SONAR_HOST_URL} \
                       -Dsonar.login=${SONAR_TOKEN}
                 '''
