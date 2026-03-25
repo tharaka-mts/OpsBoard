@@ -22,7 +22,12 @@ pipeline {
         stage('Backend Build & Test') {
             steps {
                 dir('backend') {
-                    sh 'mvn clean compile test'
+                    sh '''
+                        export SPRING_DATASOURCE_URL=jdbc:postgresql://postgres_backend:5432/opsboard
+                        export SPRING_DATASOURCE_USERNAME=opsboarduser
+                        export SPRING_DATASOURCE_PASSWORD=ops@123
+                        mvn clean compile test
+                    '''
                 }
             }
         }
