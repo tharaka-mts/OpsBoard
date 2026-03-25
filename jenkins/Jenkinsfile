@@ -5,7 +5,8 @@ pipeline {
         // Local SonarQube environment variables
         SONAR_HOST_URL = "http://sonarqube:9000"
         // This credentials ID should match the token created in Jenkins referring to SonarQube token
-        SONAR_TOKEN = credentials('sonar-token') 
+        SONAR_TOKEN = credentials('sonar-token')
+        NVD_API_KEY = credentials('nvd-api-key') 
         
         // Docker image tags
         BACKEND_IMAGE = "opsboard-backend:local"
