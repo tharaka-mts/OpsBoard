@@ -46,7 +46,7 @@ pipeline {
         stage('OWASP Dependency-Check') {
             steps {
                 echo "Running OWASP Dependency-Check..."
-                sh 'dependency-check.sh --project "OpsBoard" --scan . --format HTML --out dependency-check-report'
+                sh 'dependency-check.sh --project "OpsBoard" --scan . --format HTML --out dependency-check-report --nvdApiKey ${NVD_API_KEY}'
             }
         }
 
