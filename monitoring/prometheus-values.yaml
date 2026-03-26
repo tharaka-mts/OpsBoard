@@ -1,0 +1,66 @@
+# Minimal values for kube-prometheus-stack for OpsBoard
+# Designed to be practical and resource-efficient for the initial DevSecOps learning phase
+
+grafana:
+  enabled: true
+  adminPassword: "admin" # Default for demo purposes, change later
+  service:
+    type: LoadBalancer   # Simple exposure method for EKS to get a URL and take screenshots
+    port: 80
+  
+  # Ensure standard kube-prometheus-stack dashboards are enabled
+  defaultDashboardsEnabled: true
+
+alertmanager:
+  enabled: true
+  # Using minimal config to act as a blackhole for now
+  # Detailed routing can be added later as per requirements
+  config:
+    global:
+      resolve_timeout: 5m
+    route:
+      group_by: ['job']
+      group_wait: 30s
+      group_interval: 5m
+      repeat_interval: 12h
+      receiver: 'blackhole'
+    receivers:
+    - name: 'blackhole'
+
+prometheus:
+  enabled: true
+  prometheusSpec:
+    retention: 5d
+    scrapeInterval: "30s"
+    evaluationInterval: "30s"
+
+    # Use emptyDir for temporary storage to save on EBS volume costs for this demo/learning cluster.
+    # Replace with PVC/EBS in a production scenario.
+    storageSpec:
+      emptyDir:
+        medium: Memory
+
+    # Limit resources to fit comfortably inside a small EKS cluster
+    resources:
+      requests:
+        memory: 400Mi
+
+kubeStateMetrics:
+  enabled: true
+
+nodeExporter:
+  enabled: true
+
+# Disable parts of the stack we won't heavily use in v1 to save memory
+kubelet:
+  enabled: true
+kubeControllerManager:
+  enabled: false
+coreDns:
+  enabled: false
+kubeEtcd:
+  enabled: false
+kubeScheduler:
+  enabled: false
+kubeProxy:
+  enabled: false

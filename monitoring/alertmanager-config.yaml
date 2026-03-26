@@ -1,0 +1,18 @@
+# Minimal Alertmanager configuration for OpsBoard
+# Currently acts as a blackhole (drops alerts) until real routing is needed.
+# This file is a standalone representation of what is embedded in prometheus-values.yaml
+# We keep it here to easily extend with Slack/Email webhooks later.
+
+global:
+  resolve_timeout: 5m
+
+route:
+  group_by: ['job']
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 12h
+  receiver: 'blackhole'
+
+receivers:
+- name: 'blackhole'
+  # Intentional empty receiver to silently drop alerts for demo phase
