@@ -1,0 +1,39 @@
+backend:
+  image:
+    repository: opsboard-backend
+    tag: "latest"
+    pullPolicy: IfNotPresent
+  replicaCount: 1
+  containerPort: 8080
+  servicePort: 8080
+
+frontend:
+  image:
+    repository: opsboard-frontend
+    tag: "latest"
+    pullPolicy: IfNotPresent
+  replicaCount: 1
+  containerPort: 80
+  servicePort: 80
+
+postgres:
+  image:
+    repository: postgres
+    tag: "15-alpine"
+    pullPolicy: IfNotPresent
+  port: 5432
+  database: opsboard
+  username: opsboard_user
+  passwordPlaceholder: "replace-me"
+  storageSize: 2Gi
+
+ingress:
+  enabled: true
+  className: nginx
+  host: opsboard.local
+  annotations: {}
+    # kubernetes.io/ingress.class: nginx
+    # cert-manager.io/cluster-issuer: "letsencrypt-prod"
+
+config:
+  springProfilesActive: "prod"

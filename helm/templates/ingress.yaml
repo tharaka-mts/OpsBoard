@@ -1,0 +1,34 @@
+{{- if .Values.ingress.enabled -}}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: opsboard-ingress
+  labels:
+    app: opsboard
+  {{- with .Values.ingress.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- if .Values.ingress.className }}
+  ingressClassName: {{ .Values.ingress.className }}
+  {{- end }}
+  rules:
+    - host: {{ .Values.ingress.host | quote }}
+      http:
+        paths:
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: opsboard-backend
+                port:
+                  number: {{ .Values.backend.servicePort }}
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: opsboard-frontend
+                port:
+                  number: {{ .Values.frontend.servicePort }}
+{{- end }}
