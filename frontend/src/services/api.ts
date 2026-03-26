@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: 'http://localhost:8080/api', // Connects directly to Spring Boot backend
+  baseURL: '/api', // Connects via Ingress in K8s or local proxy in Dev
   headers: {
     'Content-Type': 'application/json',
   },
