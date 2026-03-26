@@ -1,7 +1,7 @@
 backend:
   image:
     repository: opsboard-backend
-    tag: "latest"
+    tag: "local"
     pullPolicy: IfNotPresent
   replicaCount: 1
   containerPort: 8080
@@ -10,7 +10,7 @@ backend:
 frontend:
   image:
     repository: opsboard-frontend
-    tag: "latest"
+    tag: "local"
     pullPolicy: IfNotPresent
   replicaCount: 1
   containerPort: 80
@@ -19,13 +19,13 @@ frontend:
 postgres:
   image:
     repository: postgres
-    tag: "15-alpine"
+    tag: "16-alpine"
     pullPolicy: IfNotPresent
   port: 5432
   database: opsboard
   username: opsboard_user
   passwordPlaceholder: "replace-me"
-  storageSize: 2Gi
+  storageSize: 1Gi
 
 ingress:
   enabled: true
