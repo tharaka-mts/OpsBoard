@@ -1,0 +1,25 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: opsboard
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  description: Default AppProject for the OpsBoard application
+  
+  # Allow all repositories (can be locked down to the specific OpsBoard Git repo later)
+  sourceRepos:
+    - '*'
+    # - 'https://github.com/your-org/opsboard.git' # TODO: Update with actual repo URL
+  
+  # Allow deployment to the expected local or remote cluster, targeting the opsboard namespace
+  destinations:
+    - server: 'https://kubernetes.default.svc'
+      namespace: opsboard
+  
+  # Allow all cluster-scoped resources to be deployed (like Namespaces or IngressClasses if they exist)
+  # This can be restricted down the road
+  clusterResourceWhitelist:
+    - group: '*'
+      kind: '*'

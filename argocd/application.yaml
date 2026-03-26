@@ -1,0 +1,33 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: opsboard
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: opsboard
+
+  source:
+    # TODO: Update with your actual Git repository URL
+    repoURL: 'https://github.com/your-org/opsboard.git' 
+    # TODO: Update to the branch or tag you want ArgoCD to track
+    targetRevision: main
+    # Path inside the repository where the Helm chart is located
+    path: helm
+
+  destination:
+    # Standard local cluster URL when ArgoCD is running inside the same cluster
+    server: 'https://kubernetes.default.svc'
+    # Target namespace for the application deployment
+    namespace: opsboard
+
+  # Keep sync strategy manual first, as requested.
+  # Once stable, automated syncing can be enabled:
+  # syncPolicy:
+  #   automated:
+  #     prune: true
+  #     selfHeal: true
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
