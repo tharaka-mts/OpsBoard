@@ -27,14 +27,12 @@ spec:
             - secretRef:
                 name: opsboard-secret
           livenessProbe:
-            httpGet:
-              path: /actuator/health/liveness
+            tcpSocket:
               port: http
             initialDelaySeconds: 30
             periodSeconds: 10
           readinessProbe:
-            httpGet:
-              path: /actuator/health/readiness
+            tcpSocket:
               port: http
             initialDelaySeconds: 15
             periodSeconds: 10
