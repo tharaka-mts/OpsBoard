@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: opsboard-postgres
+  labels:
+    app: opsboard-postgres
+spec:
+  serviceName: opsboard-postgres
+  replicas: 1
+  selector:
+    matchLabels:
+      app: opsboard-postgres
+  template:
+    metadata:
+      labels:
+        app: opsboard-postgres
+    spec:
+      containers:
+        - name: postgres
+          image: "{{ .Values.postgres.image.repository }}:{{ .Values.postgres.image.tag }}"
+          imagePullPolicy: {{ .Values.postgres.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.postgres.port }}
+              name: tcp-postgres
+          env:
+            - name: POSTGRES_DB
+              value: "{{ .Values.postgres.database }}"
+            - name: POSTGRES_USER
+              value: "{{ .Values.postgres.username }}"
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: opsboard-secret
+                  key: POSTGRES_PASSWORD
+          volumeMounts:
+            - name: postgres-data
+              mountPath: /var/lib/postgresql/data
+  volumeClaimTemplates:
+    - metadata:
+        name: postgres-data
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+        resources:
+          requests:
+            storage: {{ .Values.postgres.storageSize }}

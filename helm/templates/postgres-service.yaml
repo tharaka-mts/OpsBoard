@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: opsboard-postgres
+  labels:
+    app: opsboard-postgres
+spec:
+  type: ClusterIP
+  ports:
+    - port: {{ .Values.postgres.port }}
+      targetPort: tcp-postgres
+      protocol: TCP
+      name: tcp-postgres
+  selector:
+    app: opsboard-postgres
