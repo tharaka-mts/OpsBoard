@@ -10,7 +10,7 @@ spec:
 
   source:
     # TODO: Update with your actual Git repository URL
-    repoURL: 'https://github.com/your-org/opsboard.git' 
+    repoURL: 'https://github.com/tharaka-mts/OpsBoard.git' 
     # TODO: Update to the branch or tag you want ArgoCD to track
     targetRevision: main
     # Path inside the repository where the Helm chart is located
