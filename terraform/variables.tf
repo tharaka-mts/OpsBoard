@@ -6,7 +6,7 @@ variable "aws_region" {
 
 variable "project_name" {
   type        = string
-  description = "Name of the project"
+  description = "opsboard description"
   default     = "opsboard"
 }
 
@@ -55,7 +55,7 @@ variable "eks_node_instance_type" {
 variable "key_pair_name" {
   type        = string
   description = "Name of the existing EC2 Key Pair to use"
-  default     = null
+  default     = "opsboard-ssh-key"
 }
 
 variable "create_eks" {

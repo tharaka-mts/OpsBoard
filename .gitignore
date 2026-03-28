@@ -1,8 +1,4 @@
-# Project-specific ignores
-architecture.md
-*instructions.md
-local/
-ci/
+# General
 .idea/
 .env
 *.log
@@ -17,3 +13,25 @@ build/
 # Backend build artifacts
 backend/target/
 target/
+
+# Terraform ignores (keep secrets out of git)
+.terraform/
+*.tfstate
+*.tfstate.*
+crash.log
+crash.*.log
+*.tfvars
+*.tfvars.json
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+.terraformrc
+terraform.rc
+
+# Exclude documentation or instruction files that don't need to be in EC2
+architecture.md
+*instructions.md
+
+# SSH Keys
+*.pem

@@ -1,16 +1,21 @@
 pipeline {
     agent any
 
+    parameters {
+        string(name: 'IMAGE_NAME_PREFIX', defaultValue: 'opsboard', description: 'Prefix for the Docker Image namespaces')
+    }
+
     environment {
-        // Local SonarQube environment variables
+        // SonarQube environment variables
         SONAR_HOST_URL = "http://sonarqube:9000"
-        // This credentials ID should match the token created in Jenkins referring to SonarQube token
         SONAR_TOKEN = credentials('sonar-token')
-        NVD_API_KEY = credentials('nvd-api-key') 
+        NVD_API_KEY = credentials('nvd-api-key')
         
-        // Docker image tags
-        BACKEND_IMAGE = "opsboard-backend:local"
-        FRONTEND_IMAGE = "opsboard-frontend:local"
+        // ECR & Git configuration
+        AWS_REGION = "us-east-1"
+        APP_NAME = "${params.IMAGE_NAME_PREFIX}"
+        IMAGE_TAG = "prod-${BUILD_NUMBER}"
+        GITHUB_REPO_URL = "https://github.com/tharaka-mts/OpsBoard.git"
     }
 
     stages {
@@ -56,10 +61,8 @@ pipeline {
         stage('SonarQube Scan') {
             steps {
                 echo "Running SonarQube Scan..."
-                // 'sonarqube' here refers to the name of the SonarQube server configured in Jenkins > Manage Jenkins > System
                 withSonarQubeEnv('sonarqube') {
                     sh '''
-                        # Point to the settings file inside the jenkins folder
                         sonar-scanner \
                           -Dproject.settings=jenkins/sonar-project.properties \
                           -Dsonar.host.url=${SONAR_HOST_URL} \
@@ -73,48 +76,64 @@ pipeline {
             steps {
                 echo "Waiting for SonarQube Quality Gate..."
                 timeout(time: 5, unit: 'MINUTES') {
-                    // Requires a webhook configured in SonarQube pointing to:
-                    // http://jenkins_local:8080/sonarqube-webhook/
                     waitForQualityGate abortPipeline: true
                 }
             }
         }
 
-        stage('Build Backend Docker Image locally') {
+        stage('Docker Build & Push to ECR') {
             steps {
-                dir('backend') {
-                    sh "docker build -t ${BACKEND_IMAGE} ."
+                script {
+                    echo "Authenticating with AWS ECR..."
+                    // Fetch account ID dynamically via STS 
+                    env.AWS_ACCOUNT_ID = sh(script: 'aws sts get-caller-identity --query Account --output text', returnStdout: true).trim()
+                    env.ECR_REGISTRY = "${env.AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
+                    
+                    sh "aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_REGISTRY}"
+
+                    echo "Building and tagging Backend Image..."
+                    dir('backend') {
+                        sh "docker build -t ${ECR_REGISTRY}/${APP_NAME}-backend:${IMAGE_TAG} ."
+                        echo "Pushing Backend Image..."
+                        sh "docker push ${ECR_REGISTRY}/${APP_NAME}-backend:${IMAGE_TAG}"
+                    }
+
+                    echo "Building and tagging Frontend Image..."
+                    dir('frontend') {
+                        sh "docker build -t ${ECR_REGISTRY}/${APP_NAME}-frontend:${IMAGE_TAG} ."
+                        echo "Pushing Frontend Image..."
+                        sh "docker push ${ECR_REGISTRY}/${APP_NAME}-frontend:${IMAGE_TAG}"
+                    }
                 }
             }
         }
 
-        stage('Build Frontend Docker Image locally') {
+        stage('Trivy Image Scan') {
             steps {
-                dir('frontend') {
-                    sh "docker build -t ${FRONTEND_IMAGE} ."
+                echo "Scanning Images..."
+                sh "trivy image --no-progress ${ECR_REGISTRY}/${APP_NAME}-backend:${IMAGE_TAG}"
+                sh "trivy image --no-progress ${ECR_REGISTRY}/${APP_NAME}-frontend:${IMAGE_TAG}"
+            }
+        }
+
+        stage('GitOps CD: Update Helm Manifests') {
+            steps {
+                echo "Updating helm/values.yaml with new tags for ArgoCD sync..."
+                withCredentials([usernamePassword(credentialsId: 'github-credentials', usernameVariable: 'GIT_USER', passwordVariable: 'GIT_PASS')]) {
+                    sh """
+                        git config user.email "jenkins@opsboard.local"
+                        git config user.name "Jenkins Pipeline"
+                        
+                        # Replace frontend and backend tag dynamically using sed
+                        sed -i "s/tag: .*/tag: \\"${IMAGE_TAG}\\"/g" helm/values.yaml
+                        
+                        # Authenticate and push back to main with [skip ci] to prevent loop
+                        git add helm/values.yaml
+                        git commit -m "[skip ci] CD: Update images to ${IMAGE_TAG}"
+                        
+                        git push https://${GIT_USER}:${GIT_PASS}@github.com/tharaka-mts/OpsBoard.git main
+                    """
                 }
-            }
-        }
-
-        stage('Trivy filesystem scan') {
-            steps {
-                echo "Running Trivy Vulnerability Scan on filesystem..."
-                sh 'trivy fs --no-progress .'
-            }
-        }
-
-        stage('Trivy image scan') {
-            steps {
-                echo "Running Trivy Vulnerability Scan on built images..."
-                sh "trivy image --no-progress ${BACKEND_IMAGE}"
-                sh "trivy image --no-progress ${FRONTEND_IMAGE}"
-            }
-        }
-
-        stage('Show local images') {
-            steps {
-                echo "Listing generated internal local docker images..."
-                sh 'docker images | grep opsboard || true'
             }
         }
     }
@@ -122,13 +141,26 @@ pipeline {
     post {
         always {
             archiveArtifacts artifacts: 'dependency-check-report/*', allowEmptyArchive: true
-            echo "CI pipeline completed."
         }
         success {
-            echo "SUCCESS: Local CI pipeline finished successfully."
+            echo "CI/CD Pipeline Successful."
+            slackSend(
+                color: 'good', 
+                message: "✅ SUCCESS: OpsBoard Pipeline Build #${BUILD_NUMBER} completed successfully.\nDetails: ${env.BUILD_URL}",
+                channel: '#opsboard-alerts',
+                teamDomain: 'opsboard-workspace',
+                tokenCredentialId: 'slack-token'
+            )
         }
         failure {
-            echo "FAILED: Local CI pipeline failed."
+            echo "CI/CD Pipeline Failed."
+            slackSend(
+                color: 'danger', 
+                message: "❌ FAILURE: OpsBoard Pipeline Build #${BUILD_NUMBER} failed!\nSee Logs: ${env.BUILD_URL}",
+                channel: '#opsboard-alerts',
+                teamDomain: 'opsboard-workspace',
+                tokenCredentialId: 'slack-token'
+            )
         }
     }
 }

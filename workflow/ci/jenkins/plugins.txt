@@ -1,0 +1,6 @@
+workflow-aggregator:latest
+pipeline-model-definition:latest
+git:latest
+docker-workflow:latest
+sonar:latest
+pipeline-stage-view:latest

@@ -1,7 +1,7 @@
 backend:
   image:
-    repository: opsboard-backend
-    tag: "local-v1"
+    repository: <AWS_ACCOUNT_ID>.dkr.ecr.us-east-1.amazonaws.com/opsboard-backend
+    tag: "prod-v1"
     pullPolicy: IfNotPresent
   replicaCount: 1
   containerPort: 8080
@@ -9,8 +9,8 @@ backend:
 
 frontend:
   image:
-    repository: opsboard-frontend
-    tag: "local-v1"
+    repository: <AWS_ACCOUNT_ID>.dkr.ecr.us-east-1.amazonaws.com/opsboard-frontend
+    tag: "prod-v1"
     pullPolicy: IfNotPresent
   replicaCount: 1
   containerPort: 80
