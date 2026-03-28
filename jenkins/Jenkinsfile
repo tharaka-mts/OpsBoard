@@ -126,6 +126,7 @@ pipeline {
                         
                         # Replace frontend and backend tag dynamically using sed
                         sed -i "s/tag: .*/tag: \\"${IMAGE_TAG}\\"/g" helm/values.yaml
+                        sed -i "s/<AWS_ACCOUNT_ID>/${env.AWS_ACCOUNT_ID}/g" helm/values.yaml
                         
                         # Authenticate and push back to main with [skip ci] to prevent loop
                         git add helm/values.yaml
