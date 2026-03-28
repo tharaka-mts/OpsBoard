@@ -30,6 +30,10 @@ resource "aws_instance" "this" {
 
   user_data = <<-EOF
               #!/bin/bash
+              # Increase memory map count for SonarQube/Elasticsearch
+              sysctl -w vm.max_map_count=262144
+              echo "vm.max_map_count=262144" >> /etc/sysctl.conf
+              
               apt-get update
               apt-get install -y apt-transport-https ca-certificates curl software-properties-common
               curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -

@@ -109,7 +109,7 @@ resource "aws_security_group" "eks_nodes" {
   ingress {
     description = "Allow self communication"
     from_port   = 0
-    to_port     = 65535
+    to_port     = 0
     protocol    = "-1"
     self        = true
   }
@@ -117,7 +117,7 @@ resource "aws_security_group" "eks_nodes" {
   ingress {
     description     = "Allow cluster communication"
     from_port       = 0
-    to_port         = 65535
+    to_port         = 0
     protocol        = "-1"
     security_groups = [aws_security_group.eks_cluster.id]
   }
