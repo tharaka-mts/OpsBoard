@@ -1,5 +1,5 @@
 pipeline {
-    agent any
+    agent { label 'opsboard-agent' }
 
     parameters {
         string(name: 'IMAGE_NAME_PREFIX', defaultValue: 'opsboard', description: 'Prefix for the Docker Image namespaces')
