@@ -128,11 +128,11 @@ pipeline {
                         sed -i "s/tag: .*/tag: \\"${IMAGE_TAG}\\"/g" helm/values.yaml
                         sed -i "s/<AWS_ACCOUNT_ID>/${env.AWS_ACCOUNT_ID}/g" helm/values.yaml
                         
-                        # Authenticate and push back to main with [skip ci] to prevent loop
+                        # Authenticate and push back to prod with [skip ci] to prevent loop
                         git add helm/values.yaml
                         git commit -m "[skip ci] CD: Update images to ${IMAGE_TAG}"
                         
-                        git push https://${GIT_USER}:${GIT_PASS}@github.com/tharaka-mts/OpsBoard.git main
+                        git push https://${GIT_USER}:${GIT_PASS}@github.com/tharaka-mts/OpsBoard.git prod
                     """
                 }
             }
