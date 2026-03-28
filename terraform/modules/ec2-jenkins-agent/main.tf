@@ -56,6 +56,36 @@ resource "aws_instance" "this" {
     volume_type = "gp3"
   }
 
+  user_data = <<-EOF
+              #!/bin/bash
+              # Update and Prerequisites
+              apt-get update -y
+              apt-get install -y apt-transport-https ca-certificates curl software-properties-common unzip fontconfig openjdk-17-jre
+              
+              # Install Docker
+              curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
+              add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+              apt-get update -y
+              apt-get install -y docker-ce
+              usermod -aG docker ubuntu
+              
+              # Install Kubectl
+              curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+              install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
+              
+              # Install Helm
+              curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+              
+              # Install Trivy
+              wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | gpg --dearmor | tee /usr/share/keyrings/trivy.gpg > /dev/null
+              echo "deb [signed-by=/usr/share/keyrings/trivy.gpg] https://aquasecurity.github.io/trivy-repo/deb generic main" | tee -a /etc/apt/sources.list.d/trivy.list
+              apt-get update -y
+              apt-get install -y trivy
+              
+              # Allow docker without sudo for all users (convenience for demo)
+              chmod 666 /var/run/docker.sock
+              EOF
+
   tags = {
     Name = "${var.project_name}-jenkins-agent"
   }
