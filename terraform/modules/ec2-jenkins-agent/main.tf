@@ -60,7 +60,7 @@ resource "aws_instance" "this" {
               #!/bin/bash
               # Update and Prerequisites
               apt-get update -y
-              apt-get install -y apt-transport-https ca-certificates curl software-properties-common unzip fontconfig openjdk-17-jre maven
+              apt-get install -y apt-transport-https ca-certificates curl software-properties-common unzip fontconfig openjdk-17-jre maven git
               
               # Install Docker
               curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -

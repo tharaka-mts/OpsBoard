@@ -28,12 +28,27 @@ pipeline {
         stage('Backend Build & Test') {
             steps {
                 dir('backend') {
-                    sh '''
-                        export SPRING_DATASOURCE_URL=jdbc:postgresql://postgres_backend:5432/opsboard
-                        export SPRING_DATASOURCE_USERNAME=opsboarduser
-                        export SPRING_DATASOURCE_PASSWORD=ops@123
-                        mvn clean package
-                    '''
+                    script {
+                        try {
+                            // Start a temporary sidecar container for tests
+                            sh 'docker run -d --name temp_db -e POSTGRES_USER=opsboarduser -e POSTGRES_PASSWORD=ops@123 -e POSTGRES_DB=opsboard -p 5432:5432 postgres:16-alpine'
+                            
+                            // Wait for DB to be ready
+                            sh 'sleep 10'
+                            
+                            // Run the build and tests pointing to localhost
+                            withEnv([
+                                "SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/opsboard",
+                                "SPRING_DATASOURCE_USERNAME=opsboarduser",
+                                "SPRING_DATASOURCE_PASSWORD=ops@123"
+                            ]) {
+                                sh 'mvn clean package'
+                            }
+                        } finally {
+                            // Cleanup: Stop and remove the temporary container
+                            sh 'docker rm -f temp_db || true'
+                        }
+                    }
                 }
             }
         }
