@@ -86,7 +86,12 @@ resource "aws_instance" "this" {
               #!/bin/bash
               # Update and Prerequisites
               apt-get update -y
-              apt-get install -y apt-transport-https ca-certificates curl software-properties-common unzip fontconfig openjdk-17-jre maven git awscli
+              apt-get install -y apt-transport-https ca-certificates curl software-properties-common unzip fontconfig openjdk-17-jre maven git
+              
+              # Install AWS CLI v2
+              curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+              unzip awscliv2.zip
+              ./aws/install
               
               # Install Docker
               curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
