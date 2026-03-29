@@ -18,10 +18,10 @@ data:
 
   template.on-deployed: |
     message: |
-      :rocket: *Application {{ .app.metadata.name }} has been deployed!*
-      *Cluster*: {{ .context.argocd_url }}
-      *Status*: {{ .app.status.sync.status }}
-      *Sync Commit*: {{ .app.status.sync.revision }}
+      :rocket: *Application {{ "{{" }} .app.metadata.name {{ "}}" }} has been deployed!*
+      *Cluster*: {{ "{{" }} .context.argocd_url {{ "}}" }}
+      *Status*: {{ "{{" }} .app.status.sync.status {{ "}}" }}
+      *Sync Commit*: {{ "{{" }} .app.status.sync.revision {{ "}}" }}
 
   trigger.on-deployed: |
     - when: app.status.operationState.phase in ['Succeeded']
