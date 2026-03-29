@@ -1,7 +1,7 @@
 backend:
   image:
-    repository: <AWS_ACCOUNT_ID>.dkr.ecr.us-east-1.amazonaws.com/opsboard-backend
-    tag: "prod-v1"
+    repository: 379395160438.dkr.ecr.us-east-1.amazonaws.com/opsboard-backend
+    tag: "prod-9"
     pullPolicy: IfNotPresent
   replicaCount: 1
   containerPort: 8080
@@ -9,8 +9,8 @@ backend:
 
 frontend:
   image:
-    repository: <AWS_ACCOUNT_ID>.dkr.ecr.us-east-1.amazonaws.com/opsboard-frontend
-    tag: "prod-v1"
+    repository: 379395160438.dkr.ecr.us-east-1.amazonaws.com/opsboard-frontend
+    tag: "prod-9"
     pullPolicy: IfNotPresent
   replicaCount: 1
   containerPort: 80
@@ -19,7 +19,7 @@ frontend:
 postgres:
   image:
     repository: postgres
-    tag: "16-alpine"
+    tag: "prod-9"
     pullPolicy: IfNotPresent
   port: 5432
   database: opsboard
