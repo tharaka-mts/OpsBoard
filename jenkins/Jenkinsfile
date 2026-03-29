@@ -119,6 +119,13 @@ pipeline {
                         echo "Pushing Frontend Image..."
                         sh "docker push ${ECR_REGISTRY}/${APP_NAME}-frontend:${IMAGE_TAG}"
                     }
+
+                    echo "Building and tagging Postgres Image..."
+                    dir('postgres') {
+                        sh "docker build -t ${ECR_REGISTRY}/${APP_NAME}-postgres:${IMAGE_TAG} ."
+                        echo "Pushing Postgres Image..."
+                        sh "docker push ${ECR_REGISTRY}/${APP_NAME}-postgres:${IMAGE_TAG}"
+                    }
                 }
             }
         }
