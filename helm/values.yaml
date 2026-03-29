@@ -32,8 +32,9 @@ ingress:
   className: nginx
   host: opsboard.local
   annotations: {}
-    # kubernetes.io/ingress.class: nginx
-    # cert-manager.io/cluster-issuer: "letsencrypt-prod"
 
 config:
   springProfilesActive: "prod"
+
+notifications:
+  slackToken: "REPLACE_ME_IN_K8S_SECRET"
