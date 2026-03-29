@@ -18,7 +18,7 @@ frontend:
 
 postgres:
   image:
-    repository: postgres
+    repository: 379395160438.dkr.ecr.us-east-1.amazonaws.com/opsboard-postgres
     tag: "prod-9"
     pullPolicy: IfNotPresent
   port: 5432
