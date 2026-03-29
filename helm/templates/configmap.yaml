@@ -8,3 +8,5 @@ data:
   SPRING_PROFILES_ACTIVE: "{{ .Values.config.springProfilesActive }}"
   SPRING_DATASOURCE_URL: "jdbc:postgresql://opsboard-postgres:{{ .Values.postgres.port }}/{{ .Values.postgres.database }}"
   SPRING_DATASOURCE_USERNAME: "{{ .Values.postgres.username }}"
+  POSTGRES_USER: "{{ .Values.postgres.username }}"
+  POSTGRES_DB: "{{ .Values.postgres.database }}"
