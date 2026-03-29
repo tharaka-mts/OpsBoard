@@ -20,6 +20,32 @@ resource "aws_iam_role_policy_attachment" "ecr_access" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryPowerUser"
 }
 
+resource "aws_iam_policy" "eks_access" {
+  name        = "${var.project_name}-jenkins-agent-eks-policy"
+  description = "Allow Jenkins Agent to describe EKS clusters"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "eks:DescribeCluster",
+          "eks:ListClusters",
+          "eks:AccessKubernetesApi",
+          "sts:GetCallerIdentity"
+        ]
+        Resource = "*"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "eks_access" {
+  role       = aws_iam_role.jenkins_agent.name
+  policy_arn = aws_iam_policy.eks_access.arn
+}
+
 resource "aws_iam_instance_profile" "jenkins_agent" {
   name = "${var.project_name}-jenkins-agent-profile"
   role = aws_iam_role.jenkins_agent.name
