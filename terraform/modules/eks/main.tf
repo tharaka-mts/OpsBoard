@@ -44,13 +44,6 @@ resource "aws_eks_cluster" "this" {
   ]
 }
 
-resource "aws_eks_addon" "ebs_csi" {
-  count        = var.create_eks ? 1 : 0
-  cluster_name = aws_eks_cluster.this[0].name
-  addon_name   = "aws-ebs-csi-driver"
-  depends_on   = [aws_eks_node_group.this]
-}
-
 resource "aws_iam_role" "eks_nodes" {
   count = var.create_eks ? 1 : 0
   name  = "${var.project_name}-eks-node-role"
@@ -85,12 +78,6 @@ resource "aws_iam_role_policy_attachment" "eks_container_registry_read_only" {
   count      = var.create_eks ? 1 : 0
   role       = aws_iam_role.eks_nodes[0].name
   policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
-}
-
-resource "aws_iam_role_policy_attachment" "eks_ebs_csi_policy" {
-  count      = var.create_eks ? 1 : 0
-  role       = aws_iam_role.eks_nodes[0].name
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy"
 }
 
 resource "aws_eks_node_group" "this" {
