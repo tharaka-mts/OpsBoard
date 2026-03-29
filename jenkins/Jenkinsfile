@@ -147,7 +147,8 @@ pipeline {
                         git add helm/values.yaml
                         git commit -m "[skip ci] CD: Update images to ${IMAGE_TAG}"
                         
-                        git push https://${GIT_USER}:${GIT_PASS}@github.com/tharaka-mts/OpsBoard.git prod
+                        # Use HEAD:prod to explicitly push the current detached HEAD to the remote prod branch
+                        git push https://${GIT_USER}:${GIT_PASS}@github.com/tharaka-mts/OpsBoard.git HEAD:prod
                     """
                 }
             }

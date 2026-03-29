@@ -60,7 +60,7 @@ resource "aws_instance" "this" {
               #!/bin/bash
               # Update and Prerequisites
               apt-get update -y
-              apt-get install -y apt-transport-https ca-certificates curl software-properties-common unzip fontconfig openjdk-17-jre maven git
+              apt-get install -y apt-transport-https ca-certificates curl software-properties-common unzip fontconfig openjdk-17-jre maven git awscli
               
               # Install Docker
               curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
@@ -92,6 +92,12 @@ resource "aws_instance" "this" {
               unzip dependency-check-12.1.0-release.zip
               mv dependency-check /opt/
               ln -s /opt/dependency-check/bin/dependency-check.sh /usr/local/bin/dependency-check.sh
+              
+              # Install SonarQube Scanner
+              wget https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-5.0.1.3006-linux.zip
+              unzip sonar-scanner-cli-5.0.1.3006-linux.zip
+              mv sonar-scanner-5.0.1.3006-linux /opt/sonar-scanner
+              ln -s /opt/sonar-scanner/bin/sonar-scanner /usr/local/bin/sonar-scanner
               
               # Allow docker without sudo for all users (convenience for demo)
               chmod 666 /var/run/docker.sock
