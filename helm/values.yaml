@@ -1,7 +1,7 @@
 backend:
   image:
     repository: 379395160438.dkr.ecr.us-east-1.amazonaws.com/opsboard-backend
-    tag: "prod-9"
+    tag: "prod-10"
     pullPolicy: IfNotPresent
   replicaCount: 1
   containerPort: 8080
@@ -10,7 +10,7 @@ backend:
 frontend:
   image:
     repository: 379395160438.dkr.ecr.us-east-1.amazonaws.com/opsboard-frontend
-    tag: "prod-9"
+    tag: "prod-10"
     pullPolicy: IfNotPresent
   replicaCount: 1
   containerPort: 80
@@ -19,7 +19,7 @@ frontend:
 postgres:
   image:
     repository: 379395160438.dkr.ecr.us-east-1.amazonaws.com/opsboard-postgres
-    tag: "prod-9"
+    tag: "prod-10"
     pullPolicy: IfNotPresent
   port: 5432
   database: opsboard
