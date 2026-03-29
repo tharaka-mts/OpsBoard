@@ -28,7 +28,7 @@ postgres:
   storageSize: 1Gi
 
 ingress:
-  enabled: true
+  enabled: false
   className: nginx
   host: opsboard.local
   annotations: {}

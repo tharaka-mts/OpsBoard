@@ -8,8 +8,8 @@ spec:
   type: ClusterIP
   ports:
     - port: {{ .Values.postgres.port }}
-      targetPort: tcp-postgres
+      targetPort: postgres
       protocol: TCP
-      name: tcp-postgres
+      name: postgres
   selector:
     app: opsboard-postgres
