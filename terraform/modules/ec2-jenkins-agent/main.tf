@@ -82,6 +82,17 @@ resource "aws_instance" "this" {
               apt-get update -y
               apt-get install -y trivy
               
+              # Install Node.js and Yarn
+              curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
+              apt-get install -y nodejs
+              npm install --global yarn
+              
+              # Install OWASP Dependency-Check
+              wget https://github.com/jeremylong/DependencyCheck/releases/download/v12.1.0/dependency-check-12.1.0-release.zip
+              unzip dependency-check-12.1.0-release.zip
+              mv dependency-check /opt/
+              ln -s /opt/dependency-check/bin/dependency-check.sh /usr/local/bin/dependency-check.sh
+              
               # Allow docker without sudo for all users (convenience for demo)
               chmod 666 /var/run/docker.sock
               EOF
