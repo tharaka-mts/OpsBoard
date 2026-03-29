@@ -28,10 +28,7 @@ postgres:
   storageSize: 1Gi
 
 ingress:
-  enabled: false
-  className: nginx
-  host: opsboard.local
-  annotations: {}
+  enabled: true
 
 config:
   springProfilesActive: "prod"

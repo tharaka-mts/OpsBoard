@@ -3,16 +3,16 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: opsboard-ingress
+  namespace: {{ .Release.Namespace }}
   labels:
     app: opsboard
-  {{- with .Values.ingress.annotations }}
   annotations:
+    ingress.kubernetes.io/ssl-redirect: "false"
+    {{- with .Values.ingress.annotations }}
     {{- toYaml . | nindent 4 }}
-  {{- end }}
+    {{- end }}
 spec:
-  {{- if .Values.ingress.className }}
-  ingressClassName: {{ .Values.ingress.className }}
-  {{- end }}
+  ingressClassName: nginx
   rules:
     - host: {{ .Values.ingress.host | quote }}
       http:
@@ -23,12 +23,12 @@ spec:
               service:
                 name: opsboard-backend
                 port:
-                  number: {{ .Values.backend.servicePort }}
+                  number: 8080
           - path: /
             pathType: Prefix
             backend:
               service:
                 name: opsboard-frontend
                 port:
-                  number: {{ .Values.frontend.servicePort }}
+                  number: 80
 {{- end }}
