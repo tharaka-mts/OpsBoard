@@ -20,6 +20,32 @@ resource "aws_iam_role_policy_attachment" "ecr_access" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryPowerUser"
 }
 
+resource "aws_iam_policy" "eks_access" {
+  name        = "${var.project_name}-jenkins-agent-eks-policy"
+  description = "Allow Jenkins Agent to describe EKS clusters"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "eks:DescribeCluster",
+          "eks:ListClusters",
+          "eks:AccessKubernetesApi",
+          "sts:GetCallerIdentity"
+        ]
+        Resource = "*"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "eks_access" {
+  role       = aws_iam_role.jenkins_agent.name
+  policy_arn = aws_iam_policy.eks_access.arn
+}
+
 resource "aws_iam_instance_profile" "jenkins_agent" {
   name = "${var.project_name}-jenkins-agent-profile"
   role = aws_iam_role.jenkins_agent.name
@@ -55,6 +81,58 @@ resource "aws_instance" "this" {
     volume_size = 50
     volume_type = "gp3"
   }
+
+  user_data = <<-EOF
+              #!/bin/bash
+              # Update and Prerequisites
+              apt-get update -y
+              apt-get install -y apt-transport-https ca-certificates curl software-properties-common unzip fontconfig openjdk-17-jre maven git
+              
+              # Install AWS CLI v2
+              curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+              unzip awscliv2.zip
+              ./aws/install
+              
+              # Install Docker
+              curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
+              add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+              apt-get update -y
+              apt-get install -y docker-ce
+              usermod -aG docker ubuntu
+              
+              # Install Kubectl
+              curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+              install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
+              
+              # Install Helm
+              curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+              
+              # Install Trivy
+              wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | gpg --dearmor | tee /usr/share/keyrings/trivy.gpg > /dev/null
+              echo "deb [signed-by=/usr/share/keyrings/trivy.gpg] https://aquasecurity.github.io/trivy-repo/deb generic main" | tee -a /etc/apt/sources.list.d/trivy.list
+              apt-get update -y
+              apt-get install -y trivy
+              
+              # Install Node.js and Yarn
+              curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
+              apt-get install -y nodejs
+              npm install --global yarn
+              
+              # Install OWASP Dependency-Check
+              wget https://github.com/jeremylong/DependencyCheck/releases/download/v12.1.0/dependency-check-12.1.0-release.zip
+              unzip dependency-check-12.1.0-release.zip
+              mv dependency-check /opt/
+              ln -s /opt/dependency-check/bin/dependency-check.sh /usr/local/bin/dependency-check.sh
+              
+              # Install SonarQube Scanner
+              wget https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-5.0.1.3006-linux.zip
+              unzip sonar-scanner-cli-5.0.1.3006-linux.zip
+              mv sonar-scanner-5.0.1.3006-linux /opt/sonar-scanner
+              ln -s /opt/sonar-scanner/bin/sonar-scanner /usr/local/bin/sonar-scanner
+              
+              # Allow docker without sudo for all users (convenience for demo)
+              chmod 666 /var/run/docker.sock
+              EOF
 
   tags = {
     Name = "${var.project_name}-jenkins-agent"

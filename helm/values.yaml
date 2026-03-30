@@ -1,7 +1,7 @@
 backend:
   image:
-    repository: opsboard-backend
-    tag: "local-v1"
+    repository: 379395160438.dkr.ecr.us-east-1.amazonaws.com/opsboard-backend
+    tag: "prod-12"
     pullPolicy: IfNotPresent
   replicaCount: 1
   containerPort: 8080
@@ -9,8 +9,8 @@ backend:
 
 frontend:
   image:
-    repository: opsboard-frontend
-    tag: "local-v1"
+    repository: 379395160438.dkr.ecr.us-east-1.amazonaws.com/opsboard-frontend
+    tag: "prod-12"
     pullPolicy: IfNotPresent
   replicaCount: 1
   containerPort: 80
@@ -18,8 +18,8 @@ frontend:
 
 postgres:
   image:
-    repository: postgres
-    tag: "16-alpine"
+    repository: <AWS_ACCOUNT_ID>.dkr.ecr.us-east-1.amazonaws.com/opsboard-postgres
+    tag: "prod-stable"
     pullPolicy: IfNotPresent
   port: 5432
   database: opsboard
@@ -29,11 +29,9 @@ postgres:
 
 ingress:
   enabled: true
-  className: nginx
-  host: opsboard.local
-  annotations: {}
-    # kubernetes.io/ingress.class: nginx
-    # cert-manager.io/cluster-issuer: "letsencrypt-prod"
 
 config:
   springProfilesActive: "prod"
+
+notifications:
+  slackToken: "REPLACE_ME_IN_K8S_SECRET"
