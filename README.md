@@ -21,7 +21,7 @@ OpsBoard is a professional-grade, production-ready DevSecOps project demonstrati
 
 ---
 
-## Quick Overview CI/CD after deployment
+## CI/CD Overview After Deployment
 
 - **Jenkins Pipeline - Build, Test, Scan, Push & Update values.yaml**
 ![Pipeline](docs/screenshots/ci_pipeline_success.png)
@@ -62,7 +62,7 @@ Before starting, prepare all the necessary tokens and keys that will be used acr
 ### 1.2 Generate SSH Key
 1. Go to **AWS Console -> EC2 -> Key Pairs**.
 ![Navigate to EC2 Key Pairs](docs/screenshots/navigate_to_ec2_key_pairs.png)
-2. Create a RSA Key Pair named **`opsboard-ssh-key.pem`**.
+2. Create an RSA Key Pair named **`opsboard-ssh-key.pem`**.
 ![Generate SSH Key](docs/screenshots/generate_ssh_key.png)
 3. Move the downloaded file to your local `terraform/` directory.
 
@@ -72,7 +72,7 @@ Before starting, prepare all the necessary tokens and keys that will be used acr
 
 ### 2.1 Initial Provisioning (Without EKS)
 To save time and costs during the CI setup, we first provision only the CI environment.
-1. Copy terraform.tfvars.example to **`terraform/terraform.tfvars`** and ensure `create_eks = false`.
+1. Copy `terraform.tfvars.example` to **`terraform/terraform.tfvars`** and ensure `create_eks = false`.
 2. Run the following:
 
 ```bash
@@ -85,8 +85,8 @@ terraform apply -auto-approve
 ![Terraform Applying Status](docs/screenshots/terraform_init_apply.png)
 
 ### 2.2 Get Public IP
-Open the deploy.instruction.md file or text file as you wish.
-Copy the terraform output to the file ( For future reference ).
+Open the `deploy.instructions.md` file or any preferred text editor.
+Copy the Terraform output to the file for future reference.
 Note the **Jenkins Controller Public IP** from the Terraform output or the AWS Console.
 
 ---
@@ -109,19 +109,19 @@ docker-compose up -d
 ```
 
 ### 3.2 Jenkins Initialization
-1. Open the Jenkins UI using the **Jenkins Controller Public IP**.
+1. Access the Jenkins UI using the **Jenkins Controller's Public IP**.
     ```bash
     http://<JENKINS_CONTROLLER_PUBLIC_IP>:8080
     ```
     ![Jenkins UI](docs/screenshots/jenkins_ui.png)
 
-2. **To Get Admin Password Run Below Command in Jenkins Controller**:  
+2. **To Get the Admin Password, Run the Following Command on the Jenkins Controller**:  
     ```bash
     docker exec -it jenkins cat /var/jenkins_home/secrets/initialAdminPassword
     ```
     ![Jenkins Admin Password](docs/screenshots/jenkins_admin_password.png)
 3.  **Generate SonarQube Token**:
-    Log in to SonarQube (default admin:admin), go to **Security -> Tokens**, and generate a new token.
+    Log in to SonarQube (Default admin:admin), go to **Security -> Tokens**, and generate a new token.
     ```bash
     http://<JENKINS_CONTROLLER_PUBLIC_IP>:9000
     ```    
@@ -179,7 +179,7 @@ terraform apply -auto-approve
 *(Takes 10-30 minutes for EKS provisioning)*
 
 ### 5.2 Grant EKS Permissions
-Ensure the **Jenkins Agent EC2 IAM Role** has the required permissions to manage the EKS cluster. Connect to the Agent EC2 and update its Kubeconfig:
+Ensure the **Jenkins Agent EC2 IAM Role** has the required permissions to manage the EKS cluster. Connect to the Agent EC2 via SSH and update the kubeconfig:
 ```bash
 aws eks update-kubeconfig --region us-east-1 --name opsboard-cluster
 ```
@@ -198,7 +198,7 @@ kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/st
 ## 📊 Phase 6: Monitoring & Final Sync (CD Part 2)
 
 ### 6.1 Expose ArgoCD & Login
-Get the ArgoCD Admin password:
+Get the initial ArgoCD Admin password:
 ```bash
 kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d
 ```
@@ -212,7 +212,7 @@ Access the ArgoCD UI using the **ALB URL** created by the Ingress.
     - `postgres.image.repository` (EKS manual build repo)
 
 ### 6.3 Deploy Monitoring Stack
-Since the main application Helm chart focuses on the app, deploy the monitoring stack separately:
+Since the main Helm chart focuses on the application, deploy the monitoring stack separately:
 ```bash
 cd monitoring
 # Install Prometheus & Grafana using the provided values
@@ -233,4 +233,4 @@ helm install monitoring prometheus-community/kube-prometheus-stack -f prometheus
 
 ---
 
-*OpsBoard Deployment Documentation - 2026*
+*OpsBoard Deployment Documentation*
