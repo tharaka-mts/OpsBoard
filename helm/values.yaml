@@ -18,8 +18,8 @@ frontend:
 
 postgres:
   image:
-    repository: 379395160438.dkr.ecr.us-east-1.amazonaws.com/opsboard-postgres
-    tag: "prod-12"
+    repository: <AWS_ACCOUNT_ID>.dkr.ecr.us-east-1.amazonaws.com/opsboard-postgres
+    tag: "prod-stable"
     pullPolicy: IfNotPresent
   port: 5432
   database: opsboard

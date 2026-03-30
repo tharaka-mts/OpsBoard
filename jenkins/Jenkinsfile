@@ -119,13 +119,6 @@ pipeline {
                         echo "Pushing Frontend Image..."
                         sh "docker push ${ECR_REGISTRY}/${APP_NAME}-frontend:${IMAGE_TAG}"
                     }
-
-                    echo "Building and tagging Postgres Image..."
-                    dir('postgres') {
-                        sh "docker build -t ${ECR_REGISTRY}/${APP_NAME}-postgres:${IMAGE_TAG} ."
-                        echo "Pushing Postgres Image..."
-                        sh "docker push ${ECR_REGISTRY}/${APP_NAME}-postgres:${IMAGE_TAG}"
-                    }
                 }
             }
         }
@@ -146,8 +139,9 @@ pipeline {
                         git config user.email "jenkins@opsboard.local"
                         git config user.name "Jenkins Pipeline"
                         
-                        # Replace frontend and backend tag dynamically using sed
-                        sed -i "s/tag: .*/tag: \\"${IMAGE_TAG}\\"/g" helm/values.yaml
+                        # Replace frontend and backend tag dynamically using specific sed ranges
+                        sed -i "/backend:/,/tag:/ s/tag: .*/tag: \\"${IMAGE_TAG}\\"/" helm/values.yaml
+                        sed -i "/frontend:/,/tag:/ s/tag: .*/tag: \\"${IMAGE_TAG}\\"/" helm/values.yaml
                         sed -i "s/<AWS_ACCOUNT_ID>/${env.AWS_ACCOUNT_ID}/g" helm/values.yaml
                         
                         # Authenticate and push back to prod with [skip ci] to prevent loop

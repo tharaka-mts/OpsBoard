@@ -17,3 +17,13 @@ resource "aws_ecr_repository" "frontend" {
     scan_on_push = true
   }
 }
+
+resource "aws_ecr_repository" "postgres" {
+  name                 = "${var.project_name}-postgres"
+  image_tag_mutability = "MUTABLE"
+  force_delete         = true
+
+  image_scanning_configuration {
+    scan_on_push = true
+  }
+}
