@@ -281,6 +281,19 @@ aws eks update-kubeconfig --region us-east-1 --name opsboard-cluster
 ![Kubeconfig](docs/screenshots/aws_eks_update_kubeconfig.png)
 ---
 
+### 5.2.2 Create Slack Bot for ArgoCD Notifications
+Before installing ArgoCD, you must create a Slack bot to receive synchronization and health alerts:
+
+1. Go to **Slack API -> Create New App -> From Scratch**.
+![Slack Bot Creation](docs/screenshots/slack_bot_argocd-1.png)
+2. Navigate to **OAuth & Permissions -> Scopes** and add the **`chat:write`** and **`chat:write.public`** scopes.
+![Slack Bot Scopes](docs/screenshots/slack_bot_argocd-2.png)
+3. Click **Install to Workspace** and copy the **Bot User OAuth Token**.
+![Slack Bot Token](docs/screenshots/slack_bot_argocd-3.png)
+![Slack Bot Token](docs/screenshots/slack_bot_argocd-4.png)
+
+---
+
 ## 🚢 Phase 5.3: Deploy & Expose ArgoCD
 
 ### 5.3.1 Install ArgoCD
