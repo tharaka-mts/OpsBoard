@@ -45,4 +45,5 @@ module "eks" {
   cluster_security_group_id = module.security_groups.eks_cluster_sg_id
   node_security_group_id    = module.security_groups.eks_nodes_sg_id
   node_instance_type        = var.eks_node_instance_type
+  jenkins_agent_role_arn    = module.jenkins_agent.iam_role_arn
 }
