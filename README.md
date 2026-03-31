@@ -13,6 +13,7 @@ OpsBoard is a professional-grade, production-ready DevSecOps project demonstrati
 - **Jenkins (CI)**: Centralized orchestration for the CI pipeline.
 - **OWASP (Dependency Check)**: Software Composition Analysis (SCA) for vulnerability scanning.
 - **SonarQube (Quality)**: Static Application Security Testing (SAST).
+- **AWS ECR (Container Registry)**: Container image registry for storing and managing Docker images.
 - **Trivy (Filesystem Scan)**: Deep container image and filesystem scanning.
 - **ArgoCD (CD)**: GitOps-based Continuous Deployment to Kubernetes.
 - **Redis (Caching)**: Integrated within ArgoCD for efficient state management.
@@ -48,7 +49,7 @@ OpsBoard is a professional-grade, production-ready DevSecOps project demonstrati
 
 ## 📋 Phase 1: Prerequisites & Keys
 
-Before starting, prepare all the necessary tokens and keys that will be used across the project:
+Before starting, prepare all the necessary tokens and keys that will be used across the project. Make sure to save them in a secure place and quick access so you can use them when needed. In real world scenarios, you should use a secrets manager to store these secrets.
 
 ### 1.1 IAM Tokens & Keys
 | Key Name | Purpose |
@@ -59,12 +60,46 @@ Before starting, prepare all the necessary tokens and keys that will be used acr
 | `nvd-api-key` | Used for OWASP Dependency-Check to fetch vulnerability data. |
 | `sonar-token` | Used to authenticate Jenkins with SonarQube. |
 
-### 1.2 Generate SSH Key
+### 1.2 Generate SSH Key (opsboard-ssh-key)
 1. Go to **AWS Console -> EC2 -> Key Pairs**.
 ![Navigate to EC2 Key Pairs](docs/screenshots/navigate_to_ec2_key_pairs.png)
 2. Create an RSA Key Pair named **`opsboard-ssh-key.pem`**.
 ![Generate SSH Key](docs/screenshots/generate_ssh_key.png)
 3. Move the downloaded file to your local `terraform/` directory.
+
+### 1.3 GitHub Personal Access Token ( github-credentials )
+1. Go to **GitHub -> Settings -> Developer settings -> Personal access tokens -> Tokens (classic)**.
+![GitHub Personal Access Token](docs/screenshots/github_personal_access_token-1.png)
+![GitHub Personal Access Token](docs/screenshots/github_personal_access_token-2.png)
+
+2. **Pick name and select repo access** ( This shows classic tokens, if you are using fine-grained tokens, select repository access)
+![GitHub Personal Access Token](docs/screenshots/github_personal_access_token-3.png)
+
+3. **Copy the token**
+![GitHub Personal Access Token](docs/screenshots/github_personal_access_token-4.png)
+
+### 1.4 Slack Token
+1. Go to **Slack App -> More -> Tools -> Apps -> Search Jenkins CI**.
+![Slack Token](docs/screenshots/slack_token-1.png)
+2. Click on **Add to Slack -> Open configuration browser window -> Select channel or create new channel -> copy the token**.
+![Slack Token](docs/screenshots/slack_token-2.png)
+
+### 1.5 NVD API Key
+1. Go to **NVD -> Register**.
+```bash
+https://nvd.nist.gov/developers/request-an-api-key
+```
+2. Fill the form and get the verification email.
+3. Click on the verification link in the email to get the API key
+![NVD API Key](docs/screenshots/nvd_api_key-1.png)
+![NVD API Key](docs/screenshots/nvd_api_key-2.png)
+
+**Or else use the below one**
+```bash
+4919dea7-2b9e-4169-a881-214c187b38be
+```
+### 1.6 SonarQube Token (sonar-token)[add a link here to SonarQube Token creation process below, after ec2 spin and docker compose up]
+
 
 ---
 
@@ -79,10 +114,15 @@ To save time and costs during the CI setup, we first provision only the CI envir
 cd terraform
 terraform init
 terraform plan
-terraform apply -auto-approve
 ```
 
-![Terraform Applying Status](docs/screenshots/terraform_init_apply.png)
+![Terraform Applying Status](docs/screenshots/terraform_init_apply-1.png)
+![Terraform Applying Status](docs/screenshots/terraform_init_apply-2.png)
+
+```bash
+terraform apply -auto-approve
+```
+![Terraform Applying Status](docs/screenshots/terraform_init_apply-3.png)
 
 ### 2.2 Get Public IP
 Open the `deploy.instructions.md` file or any preferred text editor.
@@ -101,12 +141,14 @@ Connect to your Jenkins Controller via SSH and start the environment.
 ssh -i "opsboard-ssh-key.pem" ubuntu@<YOUR_JENKINS_CONTROLLER_IP>
 
 # Clone the repository
-git clone https://github.com/tharaka-mts/OpsBoard.git
+git clone https://github.com/your-username/OpsBoard.git
 cd OpsBoard/workflow/ci
 
 # Start Jenkins and SonarQube using Docker Compose
 docker-compose up -d
 ```
+**This will start the Jenkins and SonarQube in the Jenkins Controller EC2 instance.**
+![Docker Compose](docs/screenshots/docker_compose.png)
 
 ### 3.2 Jenkins Initialization
 1. Access the Jenkins UI using the **Jenkins Controller's Public IP**.
@@ -125,16 +167,43 @@ docker-compose up -d
     ```bash
     http://<JENKINS_CONTROLLER_PUBLIC_IP>:9000
     ```    
-    ![SonarQube Token](docs/screenshots/sonarqube_token.png)
-3.  **Credential Setup**: Add the following credentials to Jenkins (**Dashboard -> Manage Jenkins -> Credentials**):
-    - `slack-token` 
-    - `github-credentials` 
-    - `sonar-token` 
-    - `nvd-api-key` 
-    - `opsboard-ssh-key` 
+    ![SonarQube Token](docs/screenshots/sonarqube_token-1.png)
+    ![SonarQube Token](docs/screenshots/sonarqube_token-2.png)
+    ![SonarQube Token](docs/screenshots/sonarqube_token-3.png)
+
+ **Add the webhook to SonarQube (Admin -> Configuration -> Webhooks)**:
+```bash
+http://<JENKINS_CONTROLLER_PRIVATE_IP>:8080/sonarqube-webhook/
+```
+![SonarQube Webhook](docs/screenshots/sonarqube_webhook.png)
+
+> Make sure to use the same name for the credentials as mentioned in the below table.
+4.  **Credential Setup**: Add the following credentials to Jenkins (**Dashboard -> Manage Jenkins -> Credentials**):
+    - `opsboard-ssh-key` (SSH Username with Private Key)
+    Copy the private key from the `terraform/opsboard-ssh-key.pem` file.
+    ```
+    cat terraform/opsboard-ssh-key.pem
+    ```
+    ![ssh key](docs/screenshots/ssh_key.png)
+    ![opsboard-ssh-key](docs/screenshots/opsboard-ssh-key.png)
+    - `github-credentials` (Username with Password)
+    ![github-credentials](docs/screenshots/github-credentials.png)
+    - `slack-token` (Text)
+    - `sonar-token` (Text)
+    - `nvd-api-key` (Text)
+    ![text_credentials](docs/screenshots/text_credentials.png)
 
 ### 3.3 Plugin Configuration
-Install the **SonarQube Scanner** and **Quality Gate** plugins from **Manage Jenkins -> Plugins**.
+Install the **SonarQube Quality Gate** plugins from **Manage Jenkins -> Plugins**.
+![Plugin Installation](docs/screenshots/plugin_installation.png)
+
+### 3.4 SonarQube Server Configuration & Slack Configuration
+1. Go to **Manage Jenkins -> Configure System**.
+2. Scroll down to **SonarQube servers** and click on **Add SonarQube**.
+![SonarQube Server Configuration](docs/screenshots/sonarqube_server_configuration.png)
+
+3. Scroll down to **Slack** and enter the **slack configurations**.
+![Slack Configuration](docs/screenshots/slack_configuration.png)
 
 ---
 
@@ -143,7 +212,14 @@ Install the **SonarQube Scanner** and **Quality Gate** plugins from **Manage Jen
 ### 4.1 Connect Jenkins Agent
 Add the **Jenkins Agent EC2** (created by Terraform) to the node inventory:
 1. Go to **Manage Jenkins -> Nodes**.
-2. Use the **Private IP** of the Agent EC2 and connect via SSH using the `opsboard-ssh-key`.
+2. Click on **New Node**.
+![Jenkins Agent](docs/screenshots/jenkins_agent-1.png)
+![Jenkins Agent](docs/screenshots/jenkins_agent-2.png)
+![Jenkins Agent](docs/screenshots/jenkins_agent-3.png)
+3. Use the **Public IP** of the Agent EC2 and connect via SSH using the `opsboard-ssh-key`.
+```bash
+ssh -i "opsboard-ssh-key.pem" ubuntu@<JENKINS_AGENT_PUBLIC_IP>
+```
 
 ### 4.2 Verify Agent Environment
 Log in to the Agent EC2 to ensure all dependencies are pre-installed by the Terraform bootstrap script:
@@ -152,17 +228,30 @@ docker --version
 node --version
 yarn --version
 java --version
-sonar-scanner --version
 ```
 
-### 4.3 Configure SonarQube Webhook
-Create a webhook in SonarQube pointing to: `http://<JENKINS_IP>:8080/sonarqube-webhook/`.
+### 4.3 Configure Jenkins CI Pipeline
+1. Go to **Jenkins -> New Item**.
+![Jenkins New Item](docs/screenshots/jenkins_new_item.png)
+2. Click on **Pipeline & add Details**.
+![Jenkins Pipeline](docs/screenshots/jenkins_pipeline-1.png)
+![Jenkins Pipeline](docs/screenshots/jenkins_pipeline-2.png)
+3. Click on **Save**.
+![Jenkins Pipeline](docs/screenshots/jenkins_pipeline-3.png)
+
 
 ### 4.4 Run CI Pipeline
-Create a Jenkins **Multibranch Pipeline** or **Pipeline Project**, point to your repo, and run the build.
+Run the pipeline by clicking on **Build Now**.
 *Note: The first run takes several minutes to download the OWASP vulnerability database.*
 
 ![Pipeline Workflow](docs/screenshots/ci_pipeline_success.png)
+
+**Check the slack for the pipeline status**
+![Slack Notification](docs/screenshots/slack_notification.png)
+
+**Check & Confirm the ECR for the new images**
+![ECR Images](docs/screenshots/ecr_images-1.png)
+![ECR Images](docs/screenshots/ecr_images-2.png)
 
 ---
 
@@ -174,9 +263,13 @@ Now, enable the EKS cluster in Terraform.
 2. Apply the changes:
 ```bash
 cd terraform
+terraform plan
 terraform apply -auto-approve
 ```
 *(Takes 10-30 minutes for EKS provisioning)*
+
+![Terraform Plan](docs/screenshots/terraform_plan.png)
+![Terraform Apply](docs/screenshots/terraform_apply.png)
 
 ### 5.2 Grant EKS Permissions
 Ensure the **Jenkins Agent EC2 IAM Role** has the required permissions to manage the EKS cluster. Connect to the Agent EC2 via SSH and update the kubeconfig:
