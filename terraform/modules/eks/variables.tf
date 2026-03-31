@@ -33,3 +33,8 @@ variable "node_instance_type" {
   type        = string
   description = "Instance type for EKS managed node group"
 }
+
+variable "jenkins_agent_role_arn" {
+  type        = string
+  description = "IAM Role ARN of the Jenkins Agent to grant EKS access"
+}

@@ -37,19 +37,19 @@ OpsBoard is a professional-grade, production-ready DevSecOps project demonstrati
 
 ## 🗺️ Quick Navigation
 
-- [📋 Phase 1: Prerequisites & Keys](#-phase-1-prerequisites--keys)
-- [🛠️ Phase 2: Infrastructure Provisioning (Terraform)](#-phase-2-infrastructure-provisioning-terraform)
-- [🔄 Phase 3: Jenkins Controller Setup (CI Part 1)](#-phase-3-jenkins-controller-setup-ci-part-1)
-- [🧪 Phase 4: Jenkins Agent & CI Flow (CI Part 2)](#-phase-4-jenkins-agent--ci-flow-ci-part-2)
-- [🚢 Phase 5: EKS & CD Setup (ArgoCD Part 1)](#-phase-5-eks--cd-setup-argocd-part-1)
-- [📊 Phase 6: Monitoring & Final Sync (CD Part 2)](#-phase-6-monitoring--final-sync-cd-part-2)
-- [✅ Deployment Verification](#-deployment-verification)
+- [📋 Phase 1: Prerequisites & Keys](#phase-1-prerequisites--keys)
+- [🛠️ Phase 2: Infrastructure Provisioning (Terraform)](#phase-2-infrastructure-provisioning-terraform)
+- [🔄 Phase 3: Jenkins Controller Setup (CI Part 1)](#phase-3-jenkins-controller-setup-ci-part-1)
+- [🧪 Phase 4: Jenkins Agent & CI Flow (CI Part 2)](#phase-4-jenkins-agent--ci-flow-ci-part-2)
+- [🚢 Phase 5: EKS & CD Setup (ArgoCD Part 1)](#phase-5-eks--cd-setup-argocd-part-1)
+- [📊 Phase 6: Monitoring & Final Sync (CD Part 2)](#phase-6-monitoring--final-sync-cd-part-2)
+- [✅ Deployment Verification](#deployment-verification)
 
 ---
 
 ## 📋 Phase 1: Prerequisites & Keys
 
-Before starting, prepare all the necessary tokens and keys that will be used across the project. Make sure to save them in a secure place and quick access so you can use them when needed. In real world scenarios, you should use a secrets manager to store these secrets.
+Before starting, prepare all the necessary tokens and keys that will be used across the project. Make sure to save them in a secure place with quick access so you can use them when needed. In real-world scenarios, you should use a secrets manager to store these secrets.
 
 ### 1.1 IAM Tokens & Keys
 | Key Name | Purpose |
@@ -72,7 +72,7 @@ Before starting, prepare all the necessary tokens and keys that will be used acr
 ![GitHub Personal Access Token](docs/screenshots/github_personal_access_token-1.png)
 ![GitHub Personal Access Token](docs/screenshots/github_personal_access_token-2.png)
 
-2. **Pick name and select repo access** ( This shows classic tokens, if you are using fine-grained tokens, select repository access)
+2. **Pick a name and select repository access** (This shows classic tokens; if you are using fine-grained tokens, select repository access).
 ![GitHub Personal Access Token](docs/screenshots/github_personal_access_token-3.png)
 
 3. **Copy the token**
@@ -94,7 +94,7 @@ https://nvd.nist.gov/developers/request-an-api-key
 ![NVD API Key](docs/screenshots/nvd_api_key-1.png)
 ![NVD API Key](docs/screenshots/nvd_api_key-2.png)
 
-**Or else use the below one**
+**Alternatively, use the one below:**
 ```bash
 4919dea7-2b9e-4169-a881-214c187b38be
 ```
@@ -127,7 +127,7 @@ terraform apply -auto-approve
 ### 2.2 Get Public IP
 Open the `deploy.instructions.md` file or any preferred text editor.
 Copy the Terraform output to the file for future reference.
-Note the **Jenkins Controller Public IP** from the Terraform output or the AWS Console.
+Note the **Jenkins Controller's Public IP** from the Terraform output or the AWS Console.
 
 ---
 
@@ -147,7 +147,7 @@ cd OpsBoard/workflow/ci
 # Start Jenkins and SonarQube using Docker Compose
 docker-compose up -d
 ```
-**This will start the Jenkins and SonarQube in the Jenkins Controller EC2 instance.**
+**This will start Jenkins and SonarQube in the Jenkins Controller EC2 instance.**
 ![Docker Compose](docs/screenshots/docker_compose.png)
 
 ### 3.2 Jenkins Initialization
@@ -157,7 +157,7 @@ docker-compose up -d
     ```
     ![Jenkins UI](docs/screenshots/jenkins_ui.png)
 
-2. **To Get the Admin Password, Run the Following Command on the Jenkins Controller**:  
+2. **To get the Admin Password, run the following command on the Jenkins Controller**:  
     ```bash
     docker exec -it jenkins cat /var/jenkins_home/secrets/initialAdminPassword
     ```
@@ -246,10 +246,10 @@ Run the pipeline by clicking on **Build Now**.
 
 ![Pipeline Workflow](docs/screenshots/ci_pipeline_success.png)
 
-**Check the slack for the pipeline status**
+**Check Slack for the pipeline status**
 ![Slack Notification](docs/screenshots/slack_notification.png)
 
-**Check & Confirm the ECR for the new images**
+**Check and confirm the ECR for the new images**
 ![ECR Images](docs/screenshots/ecr_images-1.png)
 ![ECR Images](docs/screenshots/ecr_images-2.png)
 
@@ -271,59 +271,150 @@ terraform apply -auto-approve
 ![Terraform Plan](docs/screenshots/terraform_plan.png)
 ![Terraform Apply](docs/screenshots/terraform_apply.png)
 
-### 5.2 Grant EKS Permissions
-Ensure the **Jenkins Agent EC2 IAM Role** has the required permissions to manage the EKS cluster. Connect to the Agent EC2 via SSH and update the kubeconfig:
+### 5.2 Grant EKS Permissions & Verify
+Ensure the **Jenkins Agent EC2 IAM Role** has the required permissions to manage the EKS cluster. Since we enabled the EKS Access API, this is now automated via Terraform. 
+
+Connect to the Agent EC2 via SSH and update the kubeconfig:
 ```bash
 aws eks update-kubeconfig --region us-east-1 --name opsboard-cluster
 ```
+![Kubeconfig](docs/screenshots/aws_eks_update_kubeconfig.png)
+---
 
-### 5.3 Deploy ArgoCD
+### 5.2.2 Create Slack Bot for ArgoCD Notifications
+Before installing ArgoCD, you must create a Slack bot to receive synchronization and health alerts:
+
+1. Go to **Slack API -> Create New App -> From Scratch**.
+![Slack Bot Creation](docs/screenshots/slack_bot_argocd-1.png)
+2. Navigate to **OAuth & Permissions -> Scopes** and add the **`chat:write`** and **`chat:write.public`** scopes.
+![Slack Bot Scopes](docs/screenshots/slack_bot_argocd-2.png)
+3. Click **Install to Workspace** and copy the **Bot User OAuth Token**.
+![Slack Bot Token](docs/screenshots/slack_bot_argocd-3.png)
+![Slack Bot Token](docs/screenshots/slack_bot_argocd-4.png)
+
+---
+
+## 🚢 Phase 5.3: Deploy & Expose ArgoCD
+
+### 5.3.1 Install ArgoCD
+Run the following commands on the agent to install ArgoCD:
 ```bash
 # Create namespace
 kubectl create namespace argocd
 
 # Install ArgoCD
-kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+helm repo add argo https://argoproj.github.io/argo-helm
+helm install argo-cd argo/argo-cd -n argocd
+
 ```
+![ArgoCD Install](docs/screenshots/argocd_install-1.png)
+![ArgoCD Install](docs/screenshots/argocd_install-2.png)
 
----
-
-## 📊 Phase 6: Monitoring & Final Sync (CD Part 2)
-
-### 6.1 Expose ArgoCD & Login
-Get the initial ArgoCD Admin password:
+### 5.3.2 Get Initial Admin Password
+ArgoCD creates a default admin password stored in a K8s secret:
 ```bash
 kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d
 ```
-Access the ArgoCD UI using the **ALB URL** created by the Ingress.
+![ArgoCD Password](docs/screenshots/argocd_password.png)
 
-### 6.2 Setup ArgoCD Application
-1.  **Add Repo**: Connect your GitHub repo in ArgoCD Settings.
-2.  **Create App**: Point to the **`helm/`** directory. Configure Parameters for:
-    - `db_password`
-    - `slack_token`
-    - `postgres.image.repository` (EKS manual build repo)
+### 5.3.3 Expose ArgoCD via ALB
+To access the ArgoCD UI from your browser, expose it using an Ingress or change the Service type to LoadBalancer:
+```bash
+# Set service type to LoadBalancer for quick access
+kubectl patch svc argocd-server -n argocd -p '{"spec": {"type": "LoadBalancer"}}'
 
-### 6.3 Deploy Monitoring Stack
-Since the main Helm chart focuses on the application, deploy the monitoring stack separately:
+# Get the Public URL (DNS Name)
+kubectl get svc argocd-server -n argocd
+```
+![ArgoCD Service ALB](docs/screenshots/argocd_svc_alb.png)
+
+---
+
+## 🚢 Phase 5.4: ArgoCD Application Configuration
+
+### 5.4.1 Connect GitHub Repository
+1. Log in to the ArgoCD UI using the ALB DNS name.
+![ArgoCD Login](docs/screenshots/argocd_login-1.png)
+![ArgoCD Login](docs/screenshots/argocd_login-2.png)
+2. Go to **Settings -> Repositories -> Connect Repo**.
+3. Add your HTTPS GitHub URL and credentials.
+![ArgoCD Repo Connect](docs/screenshots/argocd_repo_connect.png)
+
+### 5.4.2 Create the OpsBoard Application
+Create a new App with the following details:
+- **Application Name**: `opsboard-app`
+- **Project**: `default`
+- **Sync Policy**: `Manual` (or Automatic for true GitOps)
+- **Repository URL**: Your GitHub Repo
+- **Path**: `helm/`
+- **Cluster URL**: `https://kubernetes.default.svc`
+- **Namespace**: `opsboard-prod`
+
+![ArgoCD App Creation](docs/screenshots/argocd_app_creation-1.png)
+![ArgoCD App Creation](docs/screenshots/argocd_app_creation-2.png)
+![ArgoCD App Creation](docs/screenshots/argocd_app_creation-3.png)
+
+
+### 5.4.3 Configure Parameters
+In the **Parameters** section of the App, check & update the following values:
+- `db_name`: opsboard
+- `db_user`: opsboarduser
+- `db_password`: Your secure DB password.
+- `slack_token`: Your Slack Bot token.
+
+![ArgoCD App Creation](docs/screenshots/argocd_app_creation-4.png)
+![ArgoCD App Creation](docs/screenshots/argocd_app_creation-5.png)
+
+---
+
+## 📊 Phase 6: Monitoring & Final Sync
+
+### 6.1 Sync and Deploy
+Click the **Sync** button in ArgoCD to start the deployment. ArgoCD will provision the Backend, Frontend, and Postgres pods.
+![ArgoCD Sync Status](docs/screenshots/argocd_ui_sync.png)
+
+### 6.2 Expose the Application (Access the App)
+Get the **Public URL** for the OpsBoard application itself:
+```bash
+# Check the ingress to find the ALB DNS name
+kubectl get ingress opsboard-prod -n opsboard-prod
+```
+![App Ingress ALB](docs/screenshots/app_ingress_alb.png)
+
+### 6.3 Deploy Monitoring Stack (Manual Step)
+Deploy Prometheus and Grafana for real-time visibility:
 ```bash
 cd monitoring
-# Install Prometheus & Grafana using the provided values
+# Install using Helm
 helm install monitoring prometheus-community/kube-prometheus-stack -f prometheus-values.yaml
+```
+![Grafana Dashboard](docs/screenshots/grafana_dashboard.png)
+
+---
+
+## ✅ Deployment Verification & Final Checks
+
+1. **Slack Notifications**: Verify that ArgoCD and Jenkins have sent success messages to your Slack channel.
+2. **Postgres Check**: Log into the Postgres pod and confirm the `work_items` table is initialized:
+   ```bash
+   kubectl exec -it <postgres-pod-name> -n opsboard-prod -- psql -U opsboarduser -d opsboard -c "\dt"
+   ```
+3. **Frontend Access**: Open the Ingress URL in your browser and try to create a new Work Item.
+
+![Final App Dashboard](docs/screenshots/app_final_dashboard-1.png)
+![Final App Dashboard](docs/screenshots/app_final_dashboard-2.png)
+
+---
+
+## 🧹 Cleanup
+To avoid AWS costs, destroy the infrastructure when finished:
+1. **Delete the ArgoCD App** (removes K8s resources).
+2. **Terraform Destroy**:
+```bash
+cd terraform
+terraform destroy -auto-approve
 ```
 
 ---
 
-## ✅ Deployment Verification
-
-- **Notifications**: Look out for Success messages in your Slack channel.
-- **Application URL**: Access your app via the ALB Ingress URL.
-- **Database Status**: If issues persist in the DB, login and run the `init-db.sql` manual steps provided in the documentation.
-
-![Final App Dashboard](docs/screenshots/final_app_dashboard-1.png)
-
-![Final App Dashboard](docs/screenshots/final_app_dashboard-2.png)
-
----
-
-*OpsBoard Deployment Documentation*
+*OpsBoard Deployment Documentation - 2026*

@@ -17,3 +17,8 @@ output "iam_role_name" {
   description = "IAM role name of the agent"
   value       = aws_iam_role.jenkins_agent.name
 }
+
+output "iam_role_arn" {
+  description = "IAM role ARN of the agent"
+  value       = aws_iam_role.jenkins_agent.arn
+}

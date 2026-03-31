@@ -38,10 +38,32 @@ resource "aws_eks_cluster" "this" {
     security_group_ids = [var.cluster_security_group_id]
   }
 
+  access_config {
+    authentication_mode = "API_AND_CONFIG_MAP"
+  }
+
   depends_on = [
     aws_iam_role_policy_attachment.eks_cluster_policy,
     aws_iam_role_policy_attachment.eks_vpc_resource_controller
   ]
+}
+
+resource "aws_eks_access_entry" "jenkins_agent" {
+  count         = var.create_eks ? 1 : 0
+  cluster_name  = aws_eks_cluster.this[0].name
+  principal_arn = var.jenkins_agent_role_arn
+  type          = "STANDARD"
+}
+
+resource "aws_eks_access_policy_association" "jenkins_agent_admin" {
+  count         = var.create_eks ? 1 : 0
+  cluster_name  = aws_eks_cluster.this[0].name
+  policy_arn    = "arn:aws:iam::aws:policy/AmazonEKSClusterAdminPolicy"
+  principal_arn = var.jenkins_agent_role_arn
+
+  access_scope {
+    type = "cluster"
+  }
 }
 
 resource "aws_iam_role" "eks_nodes" {
